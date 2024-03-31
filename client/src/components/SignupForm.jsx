@@ -1,16 +1,45 @@
 import { useState } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
+import { useMutation, gql } from '@apollo/client';
 
-import { createUser } from '../utils/API';
 import Auth from '../utils/auth';
 
+const ADD_USER_MUTATION = gql`
+  mutation addUser($username: String!, $email: String!, $password: String!) {
+    addUser(username: $username, email: $email, password: $password) {
+      token
+      user {
+        _id
+        username
+      }
+    }
+  }
+`;
+
 const SignupForm = () => {
-  // set initial form state
+
   const [userFormData, setUserFormData] = useState({ username: '', email: '', password: '' });
-  // set state for form validation
+
   const [validated] = useState(false);
-  // set state for alert
+
   const [showAlert, setShowAlert] = useState(false);
+
+  const [addUser, { loading, error }] = useMutation(ADD_USER_MUTATION, {
+    onCompleted: (data) => {
+      console.log("Mutation completed with data:", data); 
+      if (data.addUser && data.addUser.token) {
+        Auth.login(data.addUser.token);
+      } else {
+        console.error("No token received:", data);
+        setShowAlert(true); 
+      }
+    },
+    onError: (error) => {
+      console.error(error);
+      setShowAlert(true);
+    },
+  });
+  
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -19,45 +48,34 @@ const SignupForm = () => {
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-
-    // check if form has everything (as per react-bootstrap docs)
     const form = event.currentTarget;
+
     if (form.checkValidity() === false) {
       event.preventDefault();
       event.stopPropagation();
-    }
-
-    try {
-      const response = await createUser(userFormData);
-
-      if (!response.ok) {
-        throw new Error('something went wrong!');
+    } else {
+      try {
+  
+        await addUser({
+          variables: { ...userFormData },
+        });
+      } catch (e) {
       }
-
-      const { token, user } = await response.json();
-      console.log(user);
-      Auth.login(token);
-    } catch (err) {
-      console.error(err);
-      setShowAlert(true);
     }
 
-    setUserFormData({
-      username: '',
-      email: '',
-      password: '',
-    });
+    
+    setUserFormData({ username: '', email: '', password: '' });
   };
 
   return (
     <>
-      {/* This is needed for the validation functionality above */}
-      <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
-        {/* show alert if server response is bad */}
-        <Alert dismissible onClose={() => setShowAlert(false)} show={showAlert} variant='danger'>
-          Something went wrong with your signup!
-        </Alert>
+      {/* Alert for errors */}
+      <Alert dismissible onClose={() => setShowAlert(false)} show={showAlert} variant='danger'>
+        Something went wrong with your signup!
+      </Alert>
 
+      <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
+        {/* Form fields and submit button */}
         <Form.Group className='mb-3'>
           <Form.Label htmlFor='username'>Username</Form.Label>
           <Form.Control
