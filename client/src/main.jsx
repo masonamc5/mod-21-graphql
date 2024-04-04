@@ -11,7 +11,7 @@ import SavedBooks from './pages/SavedBooks';
 import Auth from './utils/auth';
 
 const httpLink = new HttpLink({
-  uri: 'http://localhost:3001/graphql',
+  uri: '/graphql',
 });
 
 const authLink = setContext((_, { headers }) => {

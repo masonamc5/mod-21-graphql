@@ -1,4 +1,0 @@
-env:
-      MONGODB_URI: $MONGODB_URI
-    buildCommand: npm install
-    startCommand: npm run develop
