@@ -17,19 +17,21 @@ const ADD_USER_MUTATION = gql`
 `;
 
 const SignupForm = () => {
-
+ 
   const [userFormData, setUserFormData] = useState({ username: '', email: '', password: '' });
-
+  
   const [validated] = useState(false);
-
+ 
   const [showAlert, setShowAlert] = useState(false);
 
   const [addUser, { loading, error }] = useMutation(ADD_USER_MUTATION, {
     onCompleted: (data) => {
-      console.log("Mutation completed with data:", data); 
+      console.log("Mutation completed with data:", data); // 
       if (data.addUser && data.addUser.token) {
+        
         Auth.login(data.addUser.token);
       } else {
+       
         console.error("No token received:", data);
         setShowAlert(true); 
       }
@@ -55,7 +57,6 @@ const SignupForm = () => {
       event.stopPropagation();
     } else {
       try {
-  
         await addUser({
           variables: { ...userFormData },
         });
@@ -63,7 +64,6 @@ const SignupForm = () => {
       }
     }
 
-    
     setUserFormData({ username: '', email: '', password: '' });
   };
 

@@ -24,7 +24,7 @@ const GET_ME = gql`
 `;
 
 const REMOVE_BOOK = gql`
-  mutation removeBook($bookId: ID!) {
+  mutation removeBook($bookId: String!) {
     removeBook(bookId: $bookId) {
       _id
       savedBooks {
@@ -37,10 +37,28 @@ const REMOVE_BOOK = gql`
 const SavedBooks = () => {
   const [userData, setUserData] = useState({});
   const { loading, data } = useQuery(GET_ME);
-  const [removeBook] = useMutation(REMOVE_BOOK, {
+  const [removeBook, { error }] = useMutation(REMOVE_BOOK, {
     update(cache, { data: { removeBook } }) {
-      setUserData(removeBook);
-    }
+   
+      const existingBooks = cache.readQuery({ query: GET_ME });
+      if (existingBooks && existingBooks.me && existingBooks.me.savedBooks) {
+       
+        const updatedSavedBooks = existingBooks.me.savedBooks.filter(book => book.bookId !== removeBook.bookId);
+        cache.writeQuery({
+          query: GET_ME,
+          data: {
+            me: {
+              ...existingBooks.me,
+              savedBooks: updatedSavedBooks,
+            },
+          },
+        });
+      }
+    },
+    onError(err) {
+      console.error("Error on removing book:", err);
+      alert("An error occurred while attempting to delete the book. Please check the console for details.");
+    },
   });
 
   useEffect(() => {
@@ -60,7 +78,7 @@ const SavedBooks = () => {
       });
       removeBookId(bookId); 
     } catch (err) {
-      console.error(err);
+      console.error("Error in handleDeleteBook:", err);
     }
   };
 
@@ -92,7 +110,7 @@ const SavedBooks = () => {
                     <p className='small'>Authors: {book.authors.join(', ')}</p>
                     <Card.Text>{book.description}</Card.Text>
                     <Button className='btn-block btn-danger' onClick={() => handleDeleteBook(book.bookId)}>
-                      Delete this Book!
+                      Remove this Book
                     </Button>
                   </Card.Body>
                 </Card>
@@ -106,3 +124,6 @@ const SavedBooks = () => {
 };
 
 export default SavedBooks;
+
+
+

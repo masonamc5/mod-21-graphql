@@ -24,17 +24,18 @@ const SearchBooks = () => {
 
   const [saveBook] = useMutation(SAVE_BOOK, {
     onCompleted: (data) => {
+      
       const savedBookId = data.saveBook.savedBooks.map((book) => book.bookId);
       setSavedBookIds((prevSavedBookIds) => [...prevSavedBookIds, ...savedBookId]);
+      saveBookIds([...savedBookIds, ...savedBookId]); 
     },
     onError: (error) => {
       console.error('Could not save the book', error);
-      
     }
   });
 
   useEffect(() => {
-    saveBookIds(savedBookIds); // Update local storage when savedBookIds changes
+    return () => saveBookIds(savedBookIds); 
   }, [savedBookIds]);
 
   const handleFormSubmit = async (event) => {
@@ -58,6 +59,7 @@ const SearchBooks = () => {
         title: book.volumeInfo.title,
         description: book.volumeInfo.description,
         image: book.volumeInfo.imageLinks?.thumbnail || '',
+        link: book.volumeInfo.infoLink
       }));
 
       setSearchedBooks(bookData);
@@ -83,11 +85,12 @@ const SearchBooks = () => {
       await saveBook({
         variables: { bookData: { ...bookToSave } },
       });
-  
+      
     } catch (err) {
       console.error('Error saving book:', err);
     }
   };
+  searchedBooks.map(book => console.log(book.link));
 
   return (
     <>
@@ -124,11 +127,20 @@ const SearchBooks = () => {
                   <Card.Text>
                     Authors: {book.authors.join(', ')}
                   </Card.Text>
+                  
+                  <Card.Text>Description: {book.description}</Card.Text>
+                  
+        <Card.Text>
+        <Button variant="primary" href={book.link} target="_blank" rel="noopener noreferrer">
+                      More Info
+                    </Button>
+
+        </Card.Text>
                   <Button
                     variant="primary"
                     disabled={savedBookIds.includes(book.bookId)}
                     onClick={() => handleSaveBook(book.bookId)}>
-                    {savedBookIds.includes(book.bookId) ? 'Saved' : 'Save'}
+                    {savedBookIds.includes(book.bookId) ? 'Saved' : 'Save This Book'}
                   </Button>
                 </Card.Body>
               </Card>
