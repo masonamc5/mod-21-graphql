@@ -21,9 +21,10 @@ async function startServer() {
   server.applyMiddleware({ app });
 
   if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/dist')));
+    const distFolderPath = process.env.DIST_FOLDER_PATH || '../client/dist';
+    app.use(express.static(path.join(__dirname, distFolderPath)));
     app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+      res.sendFile(path.join(__dirname, distFolderPath, 'index.html'));
     });
   }
 
