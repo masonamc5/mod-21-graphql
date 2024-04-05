@@ -4,7 +4,7 @@
 
 ## Description
 
-This app uses the google books api to search and saved your favorite books. You can signup and login to view your saved books.
+This app uses the google books api to search and save your favorite books. You can signup and login to view your saved books.
 
 ## Table of Contents
 
